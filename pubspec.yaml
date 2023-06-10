@@ -1,0 +1,11 @@
+name: go_git_dart
+description: go-git-dart
+version: 0.0.1
+
+environment:
+  sdk: ">=3.0.0"
+
+dependencies:
+  ffi: ^2.0.2
+
+dev_dependencies:

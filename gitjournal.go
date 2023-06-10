@@ -5,18 +5,18 @@ import (
 	"log"
 	"os"
 
+	"C"
+
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
-func ExamplePlainClone() {
+//export GitClone
+func GitClone(url, directory, privateKeyFile, password *C.char) {
+	gitCloneInternal(C.GoString(url), C.GoString(directory), C.GoString(privateKeyFile), C.GoString(password))
+}
 
-	url, directory, privateKeyFile := os.Args[1], os.Args[2], os.Args[3]
-	var password string
-	if len(os.Args) == 5 {
-		password = os.Args[4]
-	}
-
+func gitCloneInternal(url, directory, privateKeyFile, password string) {
 	_, err := os.Stat(privateKeyFile)
 	if err != nil {
 		log.Fatalln("read file", privateKeyFile, err.Error())
@@ -42,31 +42,18 @@ func ExamplePlainClone() {
 	})
 	fmt.Println(r, err)
 }
+func main() {}
 
+/*
 func main() {
 	fmt.Println("Hello, playground")
-	ExamplePlainClone()
+
+	url, directory, privateKeyFile := os.Args[1], os.Args[2], os.Args[3]
+	var password string
+	if len(os.Args) == 5 {
+		password = os.Args[4]
+	}
+
+	gitCloneInternal(url, directory, privateKeyFile, password)
 }
-
-// func ExamplePlainClone_usernamePassword() {
-// 	// Tempdir to clone the repository
-// 	dir, err := ioutil.TempDir("", "clone-example")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	defer os.RemoveAll(dir) // clean up
-
-// 	// Clones the repository into the given dir, just as a normal git clone does
-// 	_, err = git.PlainClone(dir, false, &git.CloneOptions{
-// 		URL: "https://github.com/git-fixtures/basic.git",
-// 		Auth: &http.BasicAuth{
-// 			Username: "username",
-// 			Password: "password",
-// 		},
-// 	})
-
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+*/
