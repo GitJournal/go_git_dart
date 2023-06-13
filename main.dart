@@ -27,13 +27,14 @@ void main() {
   }
 
   final Clone clone = dylib.lookupFunction<clone_func, Clone>('GitClone');
-  clone(
+  var retValue = clone(
     'git@github.com:vhanda/homelab'.toNativeUtf8(),
     'foo'.toNativeUtf8(),
     bytes,
     pemBytes.length,
     'pass'.toNativeUtf8(),
   );
+  print("ReturnValue: $retValue");
 
   malloc.free(bytes);
 }
