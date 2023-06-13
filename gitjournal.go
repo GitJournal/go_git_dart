@@ -6,26 +6,21 @@ import (
 	"os"
 
 	"C"
+	"unsafe"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
 //export GitClone
-func GitClone(url, directory, privateKeyFile, password *C.char) {
-	gitCloneInternal(C.GoString(url), C.GoString(directory), C.GoString(privateKeyFile), C.GoString(password))
+func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) {
+	gitCloneInternal(C.GoString(url), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 }
 
-func gitCloneInternal(url, directory, privateKeyFile, password string) {
-	_, err := os.Stat(privateKeyFile)
-	if err != nil {
-		log.Fatalln("read file", privateKeyFile, err.Error())
-		return
-	}
-
+func gitCloneInternal(url string, directory string, privateKey []byte, password string) {
 	// Clone the given repository to the given directory
 	fmt.Println("git clone", url)
-	publicKeys, err := ssh.NewPublicKeysFromFile("git", privateKeyFile, password)
+	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
 	if err != nil {
 		log.Fatalln("generate publickeys failed:", err.Error())
 		return
