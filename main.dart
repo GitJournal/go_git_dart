@@ -18,25 +18,33 @@ typedef Clone = int Function(
 );
 
 void main() {
-  final pemBytes = File('/Users/vishesh/.ssh/id_ed25519').readAsBytesSync();
   final dylib = ffi.DynamicLibrary.open(_getCorrectLibrary());
+  final Clone clone = dylib.lookupFunction<clone_func, Clone>('GitClone');
 
-  var bytes = malloc.allocate<ffi.Uint8>(pemBytes.length);
+  final pemBytes = File('/Users/vishesh/.ssh/id_ed25519').readAsBytesSync();
+
+  var cPemBytes = malloc.allocate<ffi.Uint8>(pemBytes.length);
   for (var i = 0; i < pemBytes.length; i++) {
-    bytes[i] = pemBytes[i];
+    cPemBytes[i] = pemBytes[i];
   }
 
-  final Clone clone = dylib.lookupFunction<clone_func, Clone>('GitClone');
+  var cloneUrl = 'git@github.com:vhanda/homelab'.toNativeUtf8();
+  var cloneDir = 'foo'.toNativeUtf8();
+  var pemPassphrase = 'vishu002'.toNativeUtf8();
+
   var retValue = clone(
-    'git@github.com:vhanda/homelab'.toNativeUtf8(),
-    'foo'.toNativeUtf8(),
-    bytes,
+    cloneUrl,
+    cloneDir,
+    cPemBytes,
     pemBytes.length,
-    'pass'.toNativeUtf8(),
+    pemPassphrase,
   );
   print("ReturnValue: $retValue");
 
-  malloc.free(bytes);
+  malloc.free(cPemBytes);
+  malloc.free(cloneUrl);
+  malloc.free(cloneDir);
+  malloc.free(pemPassphrase);
 }
 
 String _getCorrectLibrary() {
