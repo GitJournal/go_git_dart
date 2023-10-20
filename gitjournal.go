@@ -4,17 +4,19 @@ import (
 	"os"
 
 	"C"
+	"fmt"
 	"unsafe"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
-import "fmt"
 
 const errPublicKeysFailed = 55
 const errGitCloneFailed = 56
 const errGitOpenFailed = 57
 const errGitPullFailed = 59
+const errGitRemoteOpenFailed = 59
+const errGitRemoteListFailed = 60
 
 //export GitClone
 func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
@@ -109,6 +111,58 @@ func gitPush(remote string, directory string, privateKey []byte, password string
 	}
 
 	return 0
+}
+
+/*
+type GitDefaultBranchResult struct {
+	err int
+	val *C.char
+}
+*/
+
+//export GitDefaultBranch
+func GitDefaultBranch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
+	err, val := gitDefaultBranch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	fmt.Println(val)
+	return err
+}
+
+func gitDefaultBranch(remoteName string, directory string, privateKey []byte, password string) (int, string) {
+	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+	if err != nil {
+		fmt.Println("generate publickeys failed:", err.Error())
+		return errPublicKeysFailed, ""
+	}
+
+	fmt.Println("git default branch", directory)
+	repo, err := git.PlainOpen(directory)
+	if err != nil {
+		fmt.Println("git open failed:", err.Error())
+		return errGitOpenFailed, ""
+	}
+
+	remote, err := repo.Remote(remoteName)
+	if err != nil {
+		fmt.Println("git remote failed:", err.Error())
+		return errGitRemoteOpenFailed, ""
+	}
+
+	refs, err := remote.List(&git.ListOptions{Auth: publicKeys})
+	if err != nil {
+		fmt.Println("git remote list failed:", err.Error())
+		return errGitRemoteListFailed, ""
+	}
+
+	for _, ref := range refs {
+		fmt.Println(ref.Name(), ref.Type(), ref.Target())
+		if ref.Name() == "HEAD" {
+			defaultBranch := ref.Target().Short()
+			fmt.Printf("The default branch for repository is: %s\n", defaultBranch)
+			break
+		}
+	}
+
+	return 0, ""
 }
 
 func main() {}
