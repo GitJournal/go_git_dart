@@ -13,6 +13,9 @@ import "fmt"
 
 const errPublicKeysFailed = 55
 const errGitCloneFailed = 56
+const errGitOpenFailed = 57
+const errGitOpenWorkTreeFailed = 58
+const errGitPullFailed = 59
 
 //export GitClone
 func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
@@ -38,6 +41,45 @@ func gitClone(url string, directory string, privateKey []byte, password string) 
 
 	return 0
 }
+
+//export GitFetch
+func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
+	return gitFetch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+}
+
+func gitFetch(remote string, directory string, privateKey []byte, password string) int {
+	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+	if err != nil {
+		fmt.Println("generate publickeys failed:", err.Error())
+		return errPublicKeysFailed
+	}
+
+	fmt.Println("git fetch", directory)
+	r, err := git.PlainOpen(directory)
+	if err != nil {
+		fmt.Println("git open failed:", err.Error())
+		return errGitOpenFailed
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		fmt.Println("git worktree failed:", err.Error())
+		return errGitOpenWorkTreeFailed
+	}
+
+	err = w.Pull(&git.PullOptions{RemoteName: remote, Auth: publicKeys})
+	if err == git.NoErrAlreadyUpToDate {
+		return 0
+	}
+
+	if err != nil {
+		fmt.Println("git pull failed:", err.Error())
+		return errGitPullFailed
+	}
+
+	return 0
+}
+
 func main() {}
 
 /*
