@@ -76,6 +76,38 @@ class GitBindings {
     malloc.free(cloneDir);
     malloc.free(pemPassphrase);
   }
+
+  void push(
+    String remote,
+    String directory,
+    Uint8List pemBytes,
+    String password,
+  ) {
+    var cPemBytes = malloc.allocate<ffi.Uint8>(pemBytes.length);
+    for (var i = 0; i < pemBytes.length; i++) {
+      cPemBytes[i] = pemBytes[i];
+    }
+
+    var remoteName = remote.toNativeUtf8();
+    var cloneDir = directory.toNativeUtf8();
+    var pemPassphrase = password.toNativeUtf8();
+
+    var retValue = lib.GitPush(
+      remoteName.cast<Char>(),
+      cloneDir.cast<Char>(),
+      cPemBytes.cast<Char>(),
+      pemBytes.length,
+      pemPassphrase.cast<Char>(),
+    );
+    if (retValue != 0) {
+      throw Exception("GitPush failed with error code: $retValue");
+    }
+
+    malloc.free(cPemBytes);
+    malloc.free(remoteName);
+    malloc.free(cloneDir);
+    malloc.free(pemPassphrase);
+  }
 }
 
 String _getCorrectLibrary() {
@@ -116,7 +148,7 @@ void main(List<String> arguments) {
           bindings.fetch(arguments[1], directory, pemBytes, arguments[3]);
           break;
         case 'push':
-          bindings.fetch(arguments[1], directory, pemBytes, arguments[3]);
+          bindings.push(arguments[1], directory, pemBytes, arguments[3]);
           break;
         case 'defaultBranch':
           bindings.fetch(arguments[1], directory, pemBytes, arguments[3]);
