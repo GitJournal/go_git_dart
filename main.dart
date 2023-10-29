@@ -109,7 +109,7 @@ class GitBindings {
     malloc.free(pemPassphrase);
   }
 
-  void defaultBranch(
+  String defaultBranch(
     String remote,
     String directory,
     Uint8List pemBytes,
@@ -131,14 +131,18 @@ class GitBindings {
       pemBytes.length,
       pemPassphrase.cast<Char>(),
     );
-    if (retValue != 0) {
-      throw Exception("GitDefaultBranch failed with error code: $retValue");
-    }
+    // if (retValue != 0) {
+    // throw Exception("GitDefaultBranch failed with error code: $retValue");
+    // }
 
     malloc.free(cPemBytes);
     malloc.free(remoteName);
     malloc.free(cloneDir);
     malloc.free(pemPassphrase);
+
+    var branch = retValue.cast<Utf8>().toDartString();
+    lib.free(retValue.cast());
+    return branch;
   }
 }
 
@@ -183,8 +187,9 @@ void main(List<String> arguments) {
           bindings.push(arguments[1], directory, pemBytes, arguments[3]);
           break;
         case 'defaultBranch':
-          bindings.defaultBranch(
+          var branch = bindings.defaultBranch(
               arguments[1], directory, pemBytes, arguments[3]);
+          print("DefaultBranch: $branch");
           break;
       }
       break;

@@ -3,6 +3,9 @@ package main
 import (
 	"os"
 
+	/*
+	   #include <stdlib.h>
+	*/
 	"C"
 	"fmt"
 	"unsafe"
@@ -121,10 +124,12 @@ type GitDefaultBranchResult struct {
 */
 
 //export GitDefaultBranch
-func GitDefaultBranch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
+func GitDefaultBranch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
 	err, val := gitDefaultBranch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
-	fmt.Println(val)
-	return err
+	if err != 0 {
+		return nil
+	}
+	return C.CString(val)
 }
 
 func gitDefaultBranch(remoteName string, directory string, privateKey []byte, password string) (int, string) {
@@ -134,7 +139,6 @@ func gitDefaultBranch(remoteName string, directory string, privateKey []byte, pa
 		return errPublicKeysFailed, ""
 	}
 
-	fmt.Println("git default branch", directory)
 	repo, err := git.PlainOpen(directory)
 	if err != nil {
 		fmt.Println("git open failed:", err.Error())
@@ -153,16 +157,15 @@ func gitDefaultBranch(remoteName string, directory string, privateKey []byte, pa
 		return errGitRemoteListFailed, ""
 	}
 
+	defaultBranch := ""
 	for _, ref := range refs {
-		fmt.Println(ref.Name(), ref.Type(), ref.Target())
 		if ref.Name() == "HEAD" {
-			defaultBranch := ref.Target().Short()
-			fmt.Printf("The default branch for repository is: %s\n", defaultBranch)
+			defaultBranch = ref.Target().Short()
 			break
 		}
 	}
 
-	return 0, ""
+	return 0, defaultBranch
 }
 
 func main() {}
