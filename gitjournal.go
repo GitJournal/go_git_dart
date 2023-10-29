@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 
 	/*
 	   #include <stdlib.h>
@@ -14,106 +13,107 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
-const errPublicKeysFailed = 55
-const errGitCloneFailed = 56
-const errGitOpenFailed = 57
-const errGitPullFailed = 59
-const errGitRemoteOpenFailed = 59
-const errGitRemoteListFailed = 60
-
 //export GitClone
-func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
-	return gitClone(C.GoString(url), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
+	err := gitClone(C.GoString(url), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	return nil
 }
 
-func gitClone(url string, directory string, privateKey []byte, password string) int {
+func gitClone(url string, directory string, privateKey []byte, password string) error {
 	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
 	if err != nil {
-		fmt.Println("generate publickeys failed:", err.Error())
-		return errPublicKeysFailed
+		return err
 	}
 
-	progressFile, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		panic(err)
-	}
-	defer progressFile.Close()
+	/*
+		progressFile, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		if err != nil {
+			panic(err)
+		}
+		defer progressFile.Close()
+	*/
 
 	_, err = git.PlainClone(directory, false, &git.CloneOptions{
-		Auth:     publicKeys,
-		URL:      url,
-		Progress: progressFile,
+		Auth: publicKeys,
+		URL:  url,
+		// Progress: progressFile,
 	})
 	if err != nil {
-		fmt.Println("git clone failed:", err.Error())
-		return errGitCloneFailed
+		return err
 	}
 
-	return 0
+	return nil
 }
 
 //export GitFetch
-func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
-	return gitFetch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
+	err := gitFetch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	return nil
 }
 
-func gitFetch(remote string, directory string, privateKey []byte, password string) int {
+func gitFetch(remote string, directory string, privateKey []byte, password string) error {
 	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
 	if err != nil {
-		fmt.Println("generate publickeys failed:", err.Error())
-		return errPublicKeysFailed
+		return err
 	}
 
 	fmt.Println("git fetch", directory)
 	r, err := git.PlainOpen(directory)
 	if err != nil {
-		fmt.Println("git open failed:", err.Error())
-		return errGitOpenFailed
+		return err
 	}
 
 	err = r.Fetch(&git.FetchOptions{RemoteName: remote, Auth: publicKeys})
 	if err == git.NoErrAlreadyUpToDate {
-		return 0
+		return nil
 	}
 
 	if err != nil {
-		fmt.Println("git pull failed:", err.Error())
-		return errGitPullFailed
+		return err
 	}
 
-	return 0
+	return nil
 }
 
 //export GitPush
-func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) int {
-	return gitPush(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
-}
-
-func gitPush(remote string, directory string, privateKey []byte, password string) int {
-	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
+	err := gitPush(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != nil {
-		fmt.Println("generate publickeys failed:", err.Error())
-		return errPublicKeysFailed
+		return C.CString(err.Error())
 	}
 
-	fmt.Println("git push", directory)
+	return nil
+}
+
+func gitPush(remote string, directory string, privateKey []byte, password string) error {
+	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+	if err != nil {
+		return err
+	}
+
 	r, err := git.PlainOpen(directory)
 	if err != nil {
-		fmt.Println("git open failed:", err.Error())
-		return errGitOpenFailed
+		return err
 	}
 
 	err = r.Push(&git.PushOptions{RemoteName: remote, Auth: publicKeys})
 	if err == git.NoErrAlreadyUpToDate {
-		return 0
+		return nil
 	}
 
 	if err != nil {
-		fmt.Println("git push failed:", err.Error())
-		return errGitPullFailed
+		return err
 	}
 
-	return 0
+	return nil
 }
 
 /*
@@ -136,25 +136,25 @@ func gitDefaultBranch(remoteName string, directory string, privateKey []byte, pa
 	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
 	if err != nil {
 		fmt.Println("generate publickeys failed:", err.Error())
-		return errPublicKeysFailed, ""
+		return 1, ""
 	}
 
 	repo, err := git.PlainOpen(directory)
 	if err != nil {
 		fmt.Println("git open failed:", err.Error())
-		return errGitOpenFailed, ""
+		return 1, ""
 	}
 
 	remote, err := repo.Remote(remoteName)
 	if err != nil {
 		fmt.Println("git remote failed:", err.Error())
-		return errGitRemoteOpenFailed, ""
+		return 1, ""
 	}
 
 	refs, err := remote.List(&git.ListOptions{Auth: publicKeys})
 	if err != nil {
 		fmt.Println("git remote list failed:", err.Error())
-		return errGitRemoteListFailed, ""
+		return 1, ""
 	}
 
 	defaultBranch := ""

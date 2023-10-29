@@ -35,8 +35,11 @@ class GitBindings {
       pemBytes.length,
       pemPassphrase.cast<Char>(),
     );
-    if (retValue != 0) {
-      throw Exception("GitClone failed with error code: $retValue");
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GitClone failed with error: $err");
     }
 
     malloc.free(cPemBytes);
@@ -67,8 +70,11 @@ class GitBindings {
       pemBytes.length,
       pemPassphrase.cast<Char>(),
     );
-    if (retValue != 0) {
-      throw Exception("GitFetch failed with error code: $retValue");
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GitFetch failed with error code: $err");
     }
 
     malloc.free(cPemBytes);
@@ -99,8 +105,11 @@ class GitBindings {
       pemBytes.length,
       pemPassphrase.cast<Char>(),
     );
-    if (retValue != 0) {
-      throw Exception("GitPush failed with error code: $retValue");
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GitPush failed with error code: $err");
     }
 
     malloc.free(cPemBytes);
