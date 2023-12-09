@@ -1,16 +1,33 @@
-import 'dart:ffi' as ffi;
 import 'dart:ffi';
-import 'dart:typed_data';
-import 'package:ffi/ffi.dart';
+import 'dart:ffi' as ffi;
+
 import 'dart:io';
 
-import 'generated_bindings.dart';
+import 'dart:typed_data';
+import 'package:ffi/ffi.dart';
+
+import 'go_git_dart_bindings_generated.dart';
+
+const String _libName = 'go_git_dart';
 
 class GitBindings {
-  late final NativeLibrary lib;
+  late final GoGitDartBindings lib;
 
-  GitBindings(String libraryPath) {
-    lib = NativeLibrary(ffi.DynamicLibrary.open(libraryPath));
+  GitBindings(DynamicLibrary? dylib) {
+    dylib ??= () {
+      if (Platform.isMacOS || Platform.isIOS) {
+        return DynamicLibrary.open('$_libName.framework/$_libName');
+      }
+      if (Platform.isAndroid || Platform.isLinux) {
+        return DynamicLibrary.open('lib$_libName.so');
+      }
+      if (Platform.isWindows) {
+        return DynamicLibrary.open('$_libName.dll');
+      }
+      throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
+    }();
+
+    lib = GoGitDartBindings(dylib);
   }
 
   void clone(
@@ -152,58 +169,5 @@ class GitBindings {
     var branch = retValue.cast<Utf8>().toDartString();
     lib.free(retValue.cast());
     return branch;
-  }
-}
-
-String _getCorrectLibrary() {
-  return '/Users/vishesh/src/gitjournal/go-git-dart/gitjournal.so';
-}
-
-void main(List<String> arguments) {
-  if (arguments.isEmpty) {
-    print('Please provide a command: clone, fetch, push, defaultBranch');
-    return;
-  }
-
-  final command = arguments[0];
-  final bindings = GitBindings(_getCorrectLibrary());
-
-  switch (command) {
-    case 'clone':
-      if (arguments.length != 5) {
-        print('Usage: clone <url> <directory> <pemFile> <pemPassword>');
-        return;
-      }
-      final pemBytes = File(arguments[3]).readAsBytesSync();
-      bindings.clone(arguments[1], arguments[2], pemBytes, arguments[4]);
-      break;
-    case 'fetch':
-    case 'push':
-    case 'defaultBranch':
-      if (arguments.length != 4) {
-        print('Usage: $command <remote> <pemFile> <pemPassword>');
-        return;
-      }
-      final directory = Directory.current.path;
-      print(directory);
-      final pemBytes = File(arguments[2]).readAsBytesSync();
-
-      switch (command) {
-        case 'fetch':
-          bindings.fetch(arguments[1], directory, pemBytes, arguments[3]);
-          break;
-        case 'push':
-          bindings.push(arguments[1], directory, pemBytes, arguments[3]);
-          break;
-        case 'defaultBranch':
-          var branch = bindings.defaultBranch(
-              arguments[1], directory, pemBytes, arguments[3]);
-          print("DefaultBranch: $branch");
-          break;
-      }
-      break;
-    default:
-      print('Unknown command: $command');
-      break;
   }
 }

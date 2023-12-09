@@ -1,18 +1,50 @@
 name: go_git_dart
-description: go-git-dart
+description: "Bindings for go-git"
 version: 0.0.1
 
 environment:
-  sdk: ">=3.0.0"
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   ffi: ^2.0.2
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
-  ffigen: ^8.0.2
+  ffigen: ^9.0.0
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  # This section identifies this Flutter project as a plugin project.
+  # The 'pluginClass' specifies the class (in Java, Kotlin, Swift, Objective-C, etc.)
+  # which should be registered in the plugin registry. This is required for
+  # using method channels.
+  # The Android 'package' specifies package in which the registered class is.
+  # This is required for using method channels on Android.
+  # The 'ffiPlugin' specifies that native code should be built and bundled.
+  # This is required for using `dart:ffi`.
+  # All these are used by the tooling to maintain consistency when
+  # adding or updating assets for this project.
+  #
+  # Please refer to README.md for a detailed explanation.
+  plugin:
+    platforms:
+      # This FFI plugin project was generated without specifying any
+      # platforms with the `--platform` argument. If you see the `some_platform` map below, remove it and
+      # then add platforms following the instruction here:
+      # https://flutter.dev/docs/development/packages-and-plugins/developing-packages#plugin-platforms
+      # -------------------
+      some_platform:
+        ffiPlugin: true
+    # -------------------
 
 ffigen:
-  output: "generated_bindings.dart"
+  name: GoGitDartBindings
+  output: 'lib/go_git_dart_bindings_generated.dart'
   headers:
     entry-points:
-      - "gitjournal.h"
+      - "src/gitjournal.h"
