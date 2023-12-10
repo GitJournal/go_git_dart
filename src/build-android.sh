@@ -8,7 +8,7 @@ export ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/$(ls $ANDROID_HOME/ndk | head 
 export JAVA_HOME=/Applications/Android\ Studio.app/Contents/jre/Contents/Home
 
 ROOTDIR=$(cd $(dirname $0); pwd -P)
-DISTDIR=$ROOTDIR/../android/
+DISTDIR=$ROOTDIR/../android/src/main
 TMPDIR=$ROOTDIR/tmp/android
 
 export PATH=$ANDROID_HOME/ndk/26.1.10909125/toolchains/llvm/prebuilt/darwin-x86_64/bin/:$ANDROID_HOME/platform-tools:$PATH

@@ -33,14 +33,18 @@ flutter:
   # Please refer to README.md for a detailed explanation.
   plugin:
     platforms:
+      android:
+        package: io.gitjournal.go_git_dart
+        pluginClass: GoGitDartFlutterLibsPlugin
       # This FFI plugin project was generated without specifying any
       # platforms with the `--platform` argument. If you see the `some_platform` map below, remove it and
       # then add platforms following the instruction here:
       # https://flutter.dev/docs/development/packages-and-plugins/developing-packages#plugin-platforms
       # -------------------
-      some_platform:
-        ffiPlugin: true
+      # some_platform:
+        # ffiPlugin: true
     # -------------------
+
 
 ffigen:
   name: GoGitDartBindings

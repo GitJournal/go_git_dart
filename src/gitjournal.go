@@ -11,6 +11,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	stdssh "golang.org/x/crypto/ssh"
 )
 
 //export GitClone
@@ -28,6 +29,7 @@ func gitClone(url string, directory string, privateKey []byte, password string) 
 	if err != nil {
 		return err
 	}
+	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	/*
 		progressFile, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
@@ -64,6 +66,7 @@ func gitFetch(remote string, directory string, privateKey []byte, password strin
 	if err != nil {
 		return err
 	}
+	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	fmt.Println("git fetch", directory)
 	r, err := git.PlainOpen(directory)
@@ -98,6 +101,7 @@ func gitPush(remote string, directory string, privateKey []byte, password string
 	if err != nil {
 		return err
 	}
+	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	r, err := git.PlainOpen(directory)
 	if err != nil {
@@ -138,6 +142,7 @@ func gitDefaultBranch(remoteName string, directory string, privateKey []byte, pa
 		fmt.Println("generate publickeys failed:", err.Error())
 		return 1, ""
 	}
+	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	repo, err := git.PlainOpen(directory)
 	if err != nil {

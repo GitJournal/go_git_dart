@@ -1,4 +1,4 @@
-group 'com.example.go_git_dart'
+group 'io.gitjournal.go_git_dart'
 version '1.0'
 
 buildscript {
@@ -9,7 +9,7 @@ buildscript {
 
     dependencies {
         // The Android Gradle Plugin knows how to build native code with the NDK.
-        // classpath 'com.android.tools.build:gradle:7.3.0'
+        classpath 'com.android.tools.build:gradle:7.3.0'
     }
 }
 
@@ -24,7 +24,7 @@ apply plugin: 'com.android.library'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace 'com.example.go_git_dart'
+        namespace 'io.gitjournal.go_git_dart'
     }
 
     // Bumping the plugin compileSdkVersion requires all clients of this plugin
@@ -33,10 +33,5 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        sourceSets {
-            main {
-                jniLibs.srcDirs = ['jniLibs']
-            }
-        }
     }
 }

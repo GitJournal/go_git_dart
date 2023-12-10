@@ -4,3 +4,5 @@
 devenv.local.nix
 .direnv
 
+.dart_tool
+lib/go_git_dart_bindings_generated.dart

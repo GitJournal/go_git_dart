@@ -13,13 +13,13 @@ const String _libName = 'go_git_dart';
 class GitBindings {
   late final GoGitDartBindings lib;
 
-  GitBindings(DynamicLibrary? dylib) {
+  GitBindings([DynamicLibrary? dylib]) {
     dylib ??= () {
       if (Platform.isMacOS || Platform.isIOS) {
         return DynamicLibrary.open('$_libName.framework/$_libName');
       }
       if (Platform.isAndroid || Platform.isLinux) {
-        return DynamicLibrary.open('lib$_libName.so');
+        return DynamicLibrary.open('$_libName.so');
       }
       if (Platform.isWindows) {
         return DynamicLibrary.open('$_libName.dll');
