@@ -1,8 +1,7 @@
 { pkgs, ... }:
 
 {
-  packages = [ pkgs.git ];
+  packages = [ pkgs.git pkgs.cmake ];
 
   languages.go.enable = true;
-  languages.dart.enable = true;
 }
