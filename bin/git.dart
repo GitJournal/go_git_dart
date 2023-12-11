@@ -47,8 +47,8 @@ void main(List<String> arguments) {
           bindings.push(arguments[1], directory, pemBytes, arguments[3]);
           break;
         case 'defaultBranch':
-          var branch = bindings.defaultBranch(
-              arguments[1], directory, pemBytes, arguments[3]);
+          var branch =
+              bindings.defaultBranch(arguments[1], pemBytes, arguments[3]);
           print("DefaultBranch: $branch");
           break;
       }

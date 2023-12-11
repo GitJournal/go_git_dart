@@ -10,7 +10,9 @@ import (
 	"unsafe"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	stdssh "golang.org/x/crypto/ssh"
 )
 
@@ -128,15 +130,15 @@ type GitDefaultBranchResult struct {
 */
 
 //export GitDefaultBranch
-func GitDefaultBranch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
-	err, val := gitDefaultBranch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
+	err, val := gitDefaultBranch(C.GoString(remoteUrl), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != 0 {
 		return nil
 	}
 	return C.CString(val)
 }
 
-func gitDefaultBranch(remoteName string, directory string, privateKey []byte, password string) (int, string) {
+func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (int, string) {
 	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
 	if err != nil {
 		fmt.Println("generate publickeys failed:", err.Error())
@@ -144,17 +146,10 @@ func gitDefaultBranch(remoteName string, directory string, privateKey []byte, pa
 	}
 	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
-	repo, err := git.PlainOpen(directory)
-	if err != nil {
-		fmt.Println("git open failed:", err.Error())
-		return 1, ""
-	}
-
-	remote, err := repo.Remote(remoteName)
-	if err != nil {
-		fmt.Println("git remote failed:", err.Error())
-		return 1, ""
-	}
+	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{remoteUrl},
+	})
 
 	refs, err := remote.List(&git.ListOptions{Auth: publicKeys})
 	if err != nil {

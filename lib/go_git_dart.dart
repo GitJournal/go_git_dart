@@ -136,8 +136,7 @@ class GitBindings {
   }
 
   String defaultBranch(
-    String remote,
-    String directory,
+    String remoteUrl,
     Uint8List pemBytes,
     String password,
   ) {
@@ -146,13 +145,11 @@ class GitBindings {
       cPemBytes[i] = pemBytes[i];
     }
 
-    var remoteName = remote.toNativeUtf8();
-    var cloneDir = directory.toNativeUtf8();
+    var remoteUrlN = remoteUrl.toNativeUtf8();
     var pemPassphrase = password.toNativeUtf8();
 
     var retValue = lib.GitDefaultBranch(
-      remoteName.cast<Char>(),
-      cloneDir.cast<Char>(),
+      remoteUrlN.cast<Char>(),
       cPemBytes.cast<Char>(),
       pemBytes.length,
       pemPassphrase.cast<Char>(),
@@ -162,8 +159,7 @@ class GitBindings {
     // }
 
     malloc.free(cPemBytes);
-    malloc.free(remoteName);
-    malloc.free(cloneDir);
+    malloc.free(remoteUrlN);
     malloc.free(pemPassphrase);
 
     var branch = retValue.cast<Utf8>().toDartString();
