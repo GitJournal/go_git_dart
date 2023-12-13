@@ -1,8 +1,6 @@
 // ignore_for_file: avoid_print
 
-import 'dart:ffi';
 import 'dart:io';
-
 import 'package:go_git_dart/go_git_dart.dart';
 
 String _getCorrectLibrary() {
@@ -16,8 +14,7 @@ void main(List<String> arguments) {
   }
 
   final command = arguments[0];
-  final dylib = DynamicLibrary.open(_getCorrectLibrary());
-  final bindings = GitBindings(dylib);
+  final bindings = GitBindings(_getCorrectLibrary());
 
   switch (command) {
     case 'clone':
