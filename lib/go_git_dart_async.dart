@@ -230,7 +230,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
         if (data is _PushRequest) {
           try {
             var repo = GitBindings(data.libPath);
-            repo.fetch(
+            repo.push(
                 data.remote, data.directory, data.pemBytes, data.password);
             sendPort.send(_PushResponse(data.id, null));
           } on Exception catch (e) {
