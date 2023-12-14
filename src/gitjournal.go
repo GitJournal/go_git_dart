@@ -70,7 +70,6 @@ func gitFetch(remote string, directory string, privateKey []byte, password strin
 	}
 	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
-	fmt.Println("git fetch", directory)
 	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return err
