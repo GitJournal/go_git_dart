@@ -50,6 +50,12 @@ void main(List<String> arguments) {
           break;
       }
       break;
+    case 'keygen':
+      var (publicKey, privateKey) = bindings.generateRsaKeys();
+      print('Public Key: $publicKey');
+      print('Private Key: $privateKey');
+
+      break;
     default:
       print('Unknown command: $command');
       break;

@@ -2190,6 +2190,24 @@ class GoGitDartBindings {
           int,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
+
+  ffi.Pointer<ffi.Char> GJGenerateRSAKeys(
+    ffi.Pointer<ffi.Pointer<ffi.Char>> publicKey,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> privateKey,
+  ) {
+    return _GJGenerateRSAKeys(
+      publicKey,
+      privateKey,
+    );
+  }
+
+  late final _GJGenerateRSAKeysPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Pointer<ffi.Char>>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>)>>('GJGenerateRSAKeys');
+  late final _GJGenerateRSAKeys = _GJGenerateRSAKeysPtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
 }
 
 final class __mbstate_t extends ffi.Union {

@@ -176,4 +176,27 @@ class GitBindings {
 
     return branch;
   }
+
+  (String, String) generateRsaKeys() {
+    var outputPublicKey = malloc.allocate<Pointer<Char>>(0);
+    var outputPrivateKey = malloc.allocate<Pointer<Char>>(0);
+
+    var retValue = lib.GJGenerateRSAKeys(outputPublicKey, outputPrivateKey);
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GenerateRsaKeys failed with error code: $err");
+    }
+
+    var publicKey = outputPublicKey.value.cast<Utf8>().toDartString();
+    lib.free(outputPublicKey.value.cast());
+    malloc.free(outputPublicKey);
+
+    var privateKey = outputPrivateKey.value.cast<Utf8>().toDartString();
+    lib.free(outputPrivateKey.value.cast());
+    malloc.free(outputPrivateKey);
+
+    return (publicKey, privateKey);
+  }
 }

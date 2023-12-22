@@ -50,6 +50,19 @@ func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int
 	return nil
 }
 
+//export GJGenerateRSAKeys
+func GJGenerateRSAKeys(publicKey **C.char, privateKey **C.char) *C.char {
+	publicKeyVal, privateKeyVal, err := generateRSAKeys()
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	*publicKey = C.CString(publicKeyVal)
+	*privateKey = C.CString(privateKeyVal)
+
+	return nil
+}
+
 func main() {}
 
 /*
