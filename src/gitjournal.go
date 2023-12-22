@@ -11,8 +11,10 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5/storage/memory"
+
 	stdssh "golang.org/x/crypto/ssh"
 )
 
@@ -26,12 +28,26 @@ func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen 
 	return nil
 }
 
+func buildAuth(url string, privateKey []byte, password string) (transport.AuthMethod, error) {
+	ep, err := transport.NewEndpoint(url)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKeys, err := ssh.NewPublicKeys(ep.User, privateKey, password)
+	if err != nil {
+		return nil, err
+	}
+	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
+
+	return publicKeys, nil
+}
+
 func gitClone(url string, directory string, privateKey []byte, password string) error {
-	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+	auth, err := buildAuth(url, privateKey, password)
 	if err != nil {
 		return err
 	}
-	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	/*
 		progressFile, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
@@ -42,7 +58,7 @@ func gitClone(url string, directory string, privateKey []byte, password string) 
 	*/
 
 	_, err = git.PlainClone(directory, false, &git.CloneOptions{
-		Auth: publicKeys,
+		Auth: auth,
 		URL:  url,
 		// Progress: progressFile,
 	})
@@ -63,19 +79,32 @@ func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyL
 	return nil
 }
 
-func gitFetch(remote string, directory string, privateKey []byte, password string) error {
-	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+func buildAuthForRemote(repo *git.Repository, remoteName string, privateKey []byte, password string) (transport.AuthMethod, error) {
+	rem, err := repo.Remote(remoteName)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
+	urls := rem.Config().URLs
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("no remote url")
+	}
+
+	return buildAuth(urls[0], privateKey, password)
+}
+
+func gitFetch(remote string, directory string, privateKey []byte, password string) error {
 	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return err
 	}
 
-	err = r.Fetch(&git.FetchOptions{RemoteName: remote, Auth: publicKeys})
+	auth, err := buildAuthForRemote(r, remote, privateKey, password)
+	if err != nil {
+		return err
+	}
+
+	err = r.Fetch(&git.FetchOptions{RemoteName: remote, Auth: auth})
 	if err == git.NoErrAlreadyUpToDate {
 		return nil
 	}
@@ -98,18 +127,17 @@ func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLe
 }
 
 func gitPush(remote string, directory string, privateKey []byte, password string) error {
-	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
-	if err != nil {
-		return err
-	}
-	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
-
 	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return err
 	}
 
-	err = r.Push(&git.PushOptions{RemoteName: remote, Auth: publicKeys})
+	auth, err := buildAuthForRemote(r, remote, privateKey, password)
+	if err != nil {
+		return err
+	}
+
+	err = r.Push(&git.PushOptions{RemoteName: remote, Auth: auth})
 	if err == git.NoErrAlreadyUpToDate {
 		return nil
 	}
@@ -138,19 +166,17 @@ func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int
 }
 
 func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (int, string) {
-	publicKeys, err := ssh.NewPublicKeys("git", privateKey, password)
+	auth, err := buildAuth(remoteUrl, privateKey, password)
 	if err != nil {
-		fmt.Println("generate publickeys failed:", err.Error())
 		return 1, ""
 	}
-	publicKeys.HostKeyCallback = stdssh.InsecureIgnoreHostKey()
 
 	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
 		Name: "origin",
 		URLs: []string{remoteUrl},
 	})
 
-	refs, err := remote.List(&git.ListOptions{Auth: publicKeys})
+	refs, err := remote.List(&git.ListOptions{Auth: auth})
 	if err != nil {
 		fmt.Println("git remote list failed:", err.Error())
 		return 1, ""
@@ -179,6 +205,19 @@ func main() {
 		password = os.Args[4]
 	}
 
-	gitClone(url, directory, privateKeyFile, password)
+	privateKey, err := os.ReadFile(privateKeyFile)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("URL:", url)
+	fmt.Println("Directory:", directory)
+	fmt.Println("PrivateKey:", privateKey)
+	fmt.Println("Password:", password)
+
+	err = gitClone(url, directory, privateKey, password)
+	if err != nil {
+		panic(err)
+	}
 }
 */
