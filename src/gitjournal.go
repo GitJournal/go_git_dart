@@ -40,12 +40,14 @@ func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLe
 }
 
 //export GitDefaultBranch
-func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
-	err, val := gitDefaultBranch(C.GoString(remoteUrl), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
-	if err != 0 {
-		return nil
+func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char, outputBranchName **C.char) *C.char {
+	val, err := gitDefaultBranch(C.GoString(remoteUrl), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	if err != nil {
+		return C.CString(err.Error())
 	}
-	return C.CString(val)
+
+	*outputBranchName = C.CString(val)
+	return nil
 }
 
 func main() {}

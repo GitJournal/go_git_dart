@@ -2164,12 +2164,14 @@ class GoGitDartBindings {
     ffi.Pointer<ffi.Char> privateKey,
     int privateKeyLen,
     ffi.Pointer<ffi.Char> password,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outputBranchName,
   ) {
     return _GitDefaultBranch(
       remoteUrl,
       privateKey,
       privateKeyLen,
       password,
+      outputBranchName,
     );
   }
 
@@ -2179,10 +2181,15 @@ class GoGitDartBindings {
               ffi.Pointer<ffi.Char>,
               ffi.Pointer<ffi.Char>,
               ffi.Int,
-              ffi.Pointer<ffi.Char>)>>('GitDefaultBranch');
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>)>>('GitDefaultBranch');
   late final _GitDefaultBranch = _GitDefaultBranchPtr.asFunction<
-      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>,
-          ffi.Pointer<ffi.Char>, int, ffi.Pointer<ffi.Char>)>();
+      ffi.Pointer<ffi.Char> Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          int,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
 }
 
 final class __mbstate_t extends ffi.Union {

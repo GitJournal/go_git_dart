@@ -150,23 +150,30 @@ class GitBindings {
 
     var remoteUrlN = remoteUrl.toNativeUtf8();
     var pemPassphrase = password.toNativeUtf8();
+    var outputBranch = malloc.allocate<Pointer<Char>>(0);
 
     var retValue = lib.GitDefaultBranch(
       remoteUrlN.cast<Char>(),
       cPemBytes.cast<Char>(),
       pemBytes.length,
       pemPassphrase.cast<Char>(),
+      outputBranch,
     );
-    // if (retValue != 0) {
-    // throw Exception("GitDefaultBranch failed with error code: $retValue");
-    // }
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GitPush failed with error code: $err");
+    }
 
     malloc.free(cPemBytes);
     malloc.free(remoteUrlN);
     malloc.free(pemPassphrase);
 
-    var branch = retValue.cast<Utf8>().toDartString();
-    lib.free(retValue.cast());
+    var branch = outputBranch.value.cast<Utf8>().toDartString();
+    lib.free(outputBranch.value.cast());
+    malloc.free(outputBranch);
+
     return branch;
   }
 }

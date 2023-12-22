@@ -113,10 +113,10 @@ func gitPush(remote string, directory string, privateKey []byte, password string
 	return nil
 }
 
-func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (int, string) {
+func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (string, error) {
 	auth, err := buildAuth(remoteUrl, privateKey, password)
 	if err != nil {
-		return 1, ""
+		return "", err
 	}
 
 	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
@@ -126,8 +126,7 @@ func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (int
 
 	refs, err := remote.List(&git.ListOptions{Auth: auth})
 	if err != nil {
-		fmt.Println("git remote list failed:", err.Error())
-		return 1, ""
+		return "", err
 	}
 
 	defaultBranch := ""
@@ -138,5 +137,5 @@ func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (int
 		}
 	}
 
-	return 0, defaultBranch
+	return defaultBranch, nil
 }
