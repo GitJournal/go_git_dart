@@ -1,4 +1,4 @@
-package main
+package keygen
 
 import (
 	"crypto/rand"
@@ -15,7 +15,7 @@ import (
 
 // generateRSAKeys generates an RSA public/private key pair
 // and returns them as PEM encoded strings.
-func generateRSAKeys() (string, string, error) {
+func GenerateRSAKeys() (string, string, error) {
 	// Generate the private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048*2)
 	if err != nil {
@@ -47,7 +47,7 @@ func generateRSAKeys() (string, string, error) {
 		Bytes: publicKeyDER,
 	}
 	publicKeyPEM := string(pem.EncodeToMemory(publicKeyBlock))
-	publicKeyOpenSSH, err := PublicPEMtoOpenSSH([]byte(publicKeyPEM))
+	publicKeyOpenSSH, err := publicPEMtoOpenSSH([]byte(publicKeyPEM))
 	if err != nil {
 		return "", "", err
 	}
@@ -57,7 +57,7 @@ func generateRSAKeys() (string, string, error) {
 
 // Converts PEM public key to OpenSSH format to be used in authorized_keys file
 // Similar to: "ssh-keygen", "-i", "-m", "pkcs8", "-f", auth_keys_new_path
-func PublicPEMtoOpenSSH(pemBytes []byte) (string, error) {
+func publicPEMtoOpenSSH(pemBytes []byte) (string, error) {
 	// Decode and get the first block in the PEM file.
 	// In our case it should be the Public key block.
 	pemBlock, rest := pem.Decode(pemBytes)

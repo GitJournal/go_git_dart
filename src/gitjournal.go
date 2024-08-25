@@ -1,6 +1,8 @@
 package main
 
 import (
+	git "github.com/gitjournal/go-git-dart/internal/git"
+	keygen "github.com/gitjournal/go-git-dart/internal/keygen"
 
 	/*
 	   #include <stdlib.h>
@@ -11,7 +13,7 @@ import (
 
 //export GitClone
 func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
-	err := gitClone(C.GoString(url), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	err := git.Clone(C.GoString(url), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -21,7 +23,7 @@ func GitClone(url *C.char, directory *C.char, privateKey *C.char, privateKeyLen 
 
 //export GitFetch
 func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
-	err := gitFetch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	err := git.Fetch(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -31,7 +33,7 @@ func GitFetch(remote *C.char, directory *C.char, privateKey *C.char, privateKeyL
 
 //export GitPush
 func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char) *C.char {
-	err := gitPush(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	err := git.Push(C.GoString(remote), C.GoString(directory), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -41,7 +43,7 @@ func GitPush(remote *C.char, directory *C.char, privateKey *C.char, privateKeyLe
 
 //export GitDefaultBranch
 func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int, password *C.char, outputBranchName **C.char) *C.char {
-	val, err := gitDefaultBranch(C.GoString(remoteUrl), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
+	val, err := git.DefaultBranch(C.GoString(remoteUrl), C.GoBytes(unsafe.Pointer(privateKey), privateKeyLen), C.GoString(password))
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -52,7 +54,7 @@ func GitDefaultBranch(remoteUrl *C.char, privateKey *C.char, privateKeyLen C.int
 
 //export GJGenerateRSAKeys
 func GJGenerateRSAKeys(publicKey **C.char, privateKey **C.char) *C.char {
-	publicKeyVal, privateKeyVal, err := generateRSAKeys()
+	publicKeyVal, privateKeyVal, err := keygen.GenerateRSAKeys()
 	if err != nil {
 		return C.CString(err.Error())
 	}

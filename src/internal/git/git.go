@@ -1,4 +1,4 @@
-package main
+package git
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func buildAuth(url string, privateKey []byte, password string) (transport.AuthMe
 	return publicKeys, nil
 }
 
-func gitClone(url string, directory string, privateKey []byte, password string) error {
+func Clone(url string, directory string, privateKey []byte, password string) error {
 	auth, err := buildAuth(url, privateKey, password)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func buildAuthForRemote(repo *git.Repository, remoteName string, privateKey []by
 	return buildAuth(urls[0], privateKey, password)
 }
 
-func gitFetch(remote string, directory string, privateKey []byte, password string) error {
+func Fetch(remote string, directory string, privateKey []byte, password string) error {
 	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func gitFetch(remote string, directory string, privateKey []byte, password strin
 	return nil
 }
 
-func gitPush(remote string, directory string, privateKey []byte, password string) error {
+func Push(remote string, directory string, privateKey []byte, password string) error {
 	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func gitPush(remote string, directory string, privateKey []byte, password string
 	return nil
 }
 
-func gitDefaultBranch(remoteUrl string, privateKey []byte, password string) (string, error) {
+func DefaultBranch(remoteUrl string, privateKey []byte, password string) (string, error) {
 	auth, err := buildAuth(remoteUrl, privateKey, password)
 	if err != nil {
 		return "", err
