@@ -40,3 +40,12 @@ cp -rf $TMPDIR $DISTDIR/jniLibs
 find $DISTDIR -name "*.h" -exec rm {} \;
 rm -rf $DISTDIR/jniLibs/tmp
 
+echo "Android build successful"
+echo "Copying shared libraries to android project"
+
+cp ./tmp/android/armeabi-v7a/go_git_dart.so ../android/src/main/jniLibs/armeabi-v7a/go_git_dart.so
+cp ./tmp/android/arm64-v8a/go_git_dart.so ../android/src/main/jniLibs/arm64-v8a/go_git_dart.so
+cp ./tmp/android/x86/go_git_dart.so ../android/src/main/jniLibs/x86/go_git_dart.so
+cp ./tmp/android/x86_64/go_git_dart.so ../android/src/main/jniLibs/x86_64/go_git_dart.so
+
+echo "Done"
