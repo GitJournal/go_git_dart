@@ -2259,6 +2259,26 @@ class GoGitDartBindings {
       ffi.Pointer<ffi.Char> Function(
           ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
 
+  ffi.Pointer<ffi.Char> GitMove(
+    ffi.Pointer<ffi.Char> directory,
+    ffi.Pointer<ffi.Char> fromPath,
+    ffi.Pointer<ffi.Char> toPath,
+  ) {
+    return _GitMove(
+      directory,
+      fromPath,
+      toPath,
+    );
+  }
+
+  late final _GitMovePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>>('GitMove');
+  late final _GitMove = _GitMovePtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
+
   ffi.Pointer<ffi.Char> GitResetHard(
     ffi.Pointer<ffi.Char> directory,
   ) {
@@ -2292,21 +2312,21 @@ class GoGitDartBindings {
       ffi.Pointer<ffi.Char> Function(
           ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
 
-  ffi.Pointer<ffi.Char> GitCheckout(
+  ffi.Pointer<ffi.Char> GitSwitch(
     ffi.Pointer<ffi.Char> directory,
     ffi.Pointer<ffi.Char> branch,
   ) {
-    return _GitCheckout(
+    return _GitSwitch(
       directory,
       branch,
     );
   }
 
-  late final _GitCheckoutPtr = _lookup<
+  late final _GitSwitchPtr = _lookup<
       ffi.NativeFunction<
           ffi.Pointer<ffi.Char> Function(
-              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>>('GitCheckout');
-  late final _GitCheckout = _GitCheckoutPtr.asFunction<
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>>('GitSwitch');
+  late final _GitSwitch = _GitSwitchPtr.asFunction<
       ffi.Pointer<ffi.Char> Function(
           ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
 

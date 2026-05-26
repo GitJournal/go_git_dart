@@ -182,6 +182,16 @@ func Remove(directory string, path string) error {
 	return err
 }
 
+func Move(directory string, fromPath string, toPath string) error {
+	w, err := openWorktree(directory)
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Move(fromPath, toPath)
+	return err
+}
+
 func ResetHard(directory string) error {
 	_, w, err := openRepositoryAndWorktree(directory)
 	if err != nil {
@@ -211,7 +221,7 @@ func ResetHardTo(directory string, commitHash string) error {
 	})
 }
 
-func Checkout(directory string, branch string) error {
+func Switch(directory string, branch string) error {
 	branch = strings.TrimSpace(branch)
 	if branch == "" {
 		return fmt.Errorf("branch name is required")

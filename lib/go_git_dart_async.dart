@@ -116,6 +116,22 @@ class GitBindingsAsync {
     if (ex != null) throw Exception(ex);
   }
 
+  Future<void> rm(String directory, String path) {
+    return remove(directory, path);
+  }
+
+  Future<void> move(String directory, String fromPath, String toPath) async {
+    var helperIsolateSendPort = await _helperIsolateSendPort;
+    var requestId = _nextMoveRequestId++;
+    var request =
+        _MoveRequest(requestId, _libPath, directory, fromPath, toPath);
+    var completer = Completer<Exception?>();
+    _moveRequests[requestId] = completer;
+    helperIsolateSendPort.send(request);
+    var ex = await completer.future;
+    if (ex != null) throw Exception(ex);
+  }
+
   Future<void> resetHard(String directory) async {
     var helperIsolateSendPort = await _helperIsolateSendPort;
     var requestId = _nextResetHardRequestId++;
@@ -139,12 +155,12 @@ class GitBindingsAsync {
     if (ex != null) throw Exception(ex);
   }
 
-  Future<void> checkout(String directory, String branch) async {
+  Future<void> switchBranch(String directory, String branch) async {
     var helperIsolateSendPort = await _helperIsolateSendPort;
-    var requestId = _nextCheckoutRequestId++;
-    var request = _CheckoutRequest(requestId, _libPath, directory, branch);
+    var requestId = _nextSwitchRequestId++;
+    var request = _SwitchRequest(requestId, _libPath, directory, branch);
     var completer = Completer<Exception?>();
-    _checkoutRequests[requestId] = completer;
+    _switchRequests[requestId] = completer;
     helperIsolateSendPort.send(request);
     var ex = await completer.future;
     if (ex != null) throw Exception(ex);
@@ -289,6 +305,24 @@ class _RemoveResponse {
   const _RemoveResponse(this.id, this.exception);
 }
 
+class _MoveRequest {
+  final int id;
+  final String? libPath;
+  final String directory;
+  final String fromPath;
+  final String toPath;
+
+  const _MoveRequest(
+      this.id, this.libPath, this.directory, this.fromPath, this.toPath);
+}
+
+class _MoveResponse {
+  final int id;
+  final Exception? exception;
+
+  const _MoveResponse(this.id, this.exception);
+}
+
 class _ResetHardRequest {
   final int id;
   final String? libPath;
@@ -321,20 +355,20 @@ class _ResetHardToResponse {
   const _ResetHardToResponse(this.id, this.exception);
 }
 
-class _CheckoutRequest {
+class _SwitchRequest {
   final int id;
   final String? libPath;
   final String directory;
   final String branch;
 
-  const _CheckoutRequest(this.id, this.libPath, this.directory, this.branch);
+  const _SwitchRequest(this.id, this.libPath, this.directory, this.branch);
 }
 
-class _CheckoutResponse {
+class _SwitchResponse {
   final int id;
   final Exception? exception;
 
-  const _CheckoutResponse(this.id, this.exception);
+  const _SwitchResponse(this.id, this.exception);
 }
 
 class _MergeCurrentBranchRequest {
@@ -373,14 +407,17 @@ final _addRequests = <int, Completer<Exception?>>{};
 int _nextRemoveRequestId = 0;
 final _removeRequests = <int, Completer<Exception?>>{};
 
+int _nextMoveRequestId = 0;
+final _moveRequests = <int, Completer<Exception?>>{};
+
 int _nextResetHardRequestId = 0;
 final _resetHardRequests = <int, Completer<Exception?>>{};
 
 int _nextResetHardToRequestId = 0;
 final _resetHardToRequests = <int, Completer<Exception?>>{};
 
-int _nextCheckoutRequestId = 0;
-final _checkoutRequests = <int, Completer<Exception?>>{};
+int _nextSwitchRequestId = 0;
+final _switchRequests = <int, Completer<Exception?>>{};
 
 int _nextMergeCurrentBranchRequestId = 0;
 final _mergeCurrentBranchRequests = <int, Completer<Exception?>>{};
@@ -436,6 +473,12 @@ Future<SendPort> _helperIsolateSendPort = () async {
         completer.complete(data.exception);
         return;
       }
+      if (data is _MoveResponse) {
+        final completer = _moveRequests[data.id]!;
+        _moveRequests.remove(data.id);
+        completer.complete(data.exception);
+        return;
+      }
       if (data is _ResetHardResponse) {
         final completer = _resetHardRequests[data.id]!;
         _resetHardRequests.remove(data.id);
@@ -448,9 +491,9 @@ Future<SendPort> _helperIsolateSendPort = () async {
         completer.complete(data.exception);
         return;
       }
-      if (data is _CheckoutResponse) {
-        final completer = _checkoutRequests[data.id]!;
-        _checkoutRequests.remove(data.id);
+      if (data is _SwitchResponse) {
+        final completer = _switchRequests[data.id]!;
+        _switchRequests.remove(data.id);
         completer.complete(data.exception);
         return;
       }
@@ -541,6 +584,16 @@ Future<SendPort> _helperIsolateSendPort = () async {
           }
           return;
         }
+        if (data is _MoveRequest) {
+          try {
+            var repo = GitBindings(data.libPath);
+            repo.move(data.directory, data.fromPath, data.toPath);
+            sendPort.send(_MoveResponse(data.id, null));
+          } on Exception catch (e) {
+            sendPort.send(_MoveResponse(data.id, e));
+          }
+          return;
+        }
         if (data is _ResetHardRequest) {
           try {
             var repo = GitBindings(data.libPath);
@@ -561,13 +614,13 @@ Future<SendPort> _helperIsolateSendPort = () async {
           }
           return;
         }
-        if (data is _CheckoutRequest) {
+        if (data is _SwitchRequest) {
           try {
             var repo = GitBindings(data.libPath);
-            repo.checkout(data.directory, data.branch);
-            sendPort.send(_CheckoutResponse(data.id, null));
+            repo.switchBranch(data.directory, data.branch);
+            sendPort.send(_SwitchResponse(data.id, null));
           } on Exception catch (e) {
-            sendPort.send(_CheckoutResponse(data.id, e));
+            sendPort.send(_SwitchResponse(data.id, e));
           }
           return;
         }

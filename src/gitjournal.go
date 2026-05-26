@@ -82,6 +82,16 @@ func GitRemove(directory *C.char, path *C.char) *C.char {
 	return nil
 }
 
+//export GitMove
+func GitMove(directory *C.char, fromPath *C.char, toPath *C.char) *C.char {
+	err := git.Move(C.GoString(directory), C.GoString(fromPath), C.GoString(toPath))
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	return nil
+}
+
 //export GitResetHard
 func GitResetHard(directory *C.char) *C.char {
 	err := git.ResetHard(C.GoString(directory))
@@ -102,9 +112,9 @@ func GitResetHardTo(directory *C.char, commitHash *C.char) *C.char {
 	return nil
 }
 
-//export GitCheckout
-func GitCheckout(directory *C.char, branch *C.char) *C.char {
-	err := git.Checkout(C.GoString(directory), C.GoString(branch))
+//export GitSwitch
+func GitSwitch(directory *C.char, branch *C.char) *C.char {
+	err := git.Switch(C.GoString(directory), C.GoString(branch))
 	if err != nil {
 		return C.CString(err.Error())
 	}

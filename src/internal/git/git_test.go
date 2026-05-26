@@ -45,6 +45,50 @@ func TestRemoveDeletesFromWorktreeAndIndex(t *testing.T) {
 	}
 }
 
+func TestMoveRenamesInWorktreeAndIndex(t *testing.T) {
+	dir, _, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "hello")
+	commitFile(t, w, "note.md")
+
+	if err := Move(dir, "note.md", "renamed.md"); err != nil {
+		t.Fatalf("Move() error = %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, "note.md")); !os.IsNotExist(err) {
+		t.Fatalf("old file stat error = %v, want not exist", err)
+	}
+	if got := readFile(t, dir, "renamed.md"); got != "hello" {
+		t.Fatalf("new file content = %q, want %q", got, "hello")
+	}
+
+	status := worktreeStatus(t, dir)
+	if got := status.File("note.md").Staging; got != gogit.Deleted {
+		t.Fatalf("old path staging status = %v, want %v", got, gogit.Deleted)
+	}
+	if got := status.File("renamed.md").Staging; got != gogit.Added {
+		t.Fatalf("new path staging status = %v, want %v", got, gogit.Added)
+	}
+}
+
+func TestMoveFailsForMissingSource(t *testing.T) {
+	dir, _, _ := newTestRepo(t)
+
+	if err := Move(dir, "missing.md", "renamed.md"); err == nil {
+		t.Fatal("Move() error = nil, want error")
+	}
+}
+
+func TestMoveFailsForExistingDestination(t *testing.T) {
+	dir, _, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "hello")
+	commitFile(t, w, "note.md")
+	writeFile(t, dir, "renamed.md", "existing")
+
+	if err := Move(dir, "note.md", "renamed.md"); err == nil {
+		t.Fatal("Move() error = nil, want error")
+	}
+}
+
 func TestResetHardRestoresCurrentHead(t *testing.T) {
 	dir, _, w := newTestRepo(t)
 	writeFile(t, dir, "note.md", "original")
@@ -93,7 +137,7 @@ func TestResetHardToFailsForInvalidHash(t *testing.T) {
 	}
 }
 
-func TestCheckoutSwitchesExistingLocalBranches(t *testing.T) {
+func TestSwitchSwitchesExistingLocalBranches(t *testing.T) {
 	dir, _, w := newTestRepo(t)
 	writeFile(t, dir, "note.md", "master")
 	commitFile(t, w, "note.md")
@@ -107,28 +151,38 @@ func TestCheckoutSwitchesExistingLocalBranches(t *testing.T) {
 	writeFile(t, dir, "note.md", "feature")
 	commitFile(t, w, "note.md")
 
-	if err := Checkout(dir, "master"); err != nil {
-		t.Fatalf("Checkout(master) error = %v", err)
+	if err := Switch(dir, "master"); err != nil {
+		t.Fatalf("Switch(master) error = %v", err)
 	}
 	if got := readFile(t, dir, "note.md"); got != "master" {
 		t.Fatalf("master content = %q, want %q", got, "master")
 	}
 
-	if err := Checkout(dir, "feature"); err != nil {
-		t.Fatalf("Checkout(feature) error = %v", err)
+	if err := Switch(dir, "feature"); err != nil {
+		t.Fatalf("Switch(feature) error = %v", err)
 	}
 	if got := readFile(t, dir, "note.md"); got != "feature" {
 		t.Fatalf("feature content = %q, want %q", got, "feature")
 	}
 }
 
-func TestCheckoutFailsForMissingBranch(t *testing.T) {
+func TestSwitchFailsForMissingBranch(t *testing.T) {
 	dir, _, w := newTestRepo(t)
 	writeFile(t, dir, "note.md", "master")
 	commitFile(t, w, "note.md")
 
-	if err := Checkout(dir, "missing"); err == nil {
-		t.Fatal("Checkout() error = nil, want error")
+	if err := Switch(dir, "missing"); err == nil {
+		t.Fatal("Switch() error = nil, want error")
+	}
+}
+
+func TestSwitchFailsForBlankBranch(t *testing.T) {
+	dir, _, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "master")
+	commitFile(t, w, "note.md")
+
+	if err := Switch(dir, " \t\n"); err == nil {
+		t.Fatal("Switch() error = nil, want error")
 	}
 }
 

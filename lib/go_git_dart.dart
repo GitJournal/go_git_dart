@@ -250,6 +250,32 @@ class GitBindings {
     malloc.free(repoPath);
   }
 
+  void rm(String directory, String path) {
+    remove(directory, path);
+  }
+
+  void move(String directory, String fromPath, String toPath) {
+    var repoDir = directory.toNativeUtf8();
+    var fromRepoPath = fromPath.toNativeUtf8();
+    var toRepoPath = toPath.toNativeUtf8();
+
+    var retValue = lib.GitMove(
+      repoDir.cast<Char>(),
+      fromRepoPath.cast<Char>(),
+      toRepoPath.cast<Char>(),
+    );
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+
+      throw Exception("GitMove failed with error: $err");
+    }
+
+    malloc.free(repoDir);
+    malloc.free(fromRepoPath);
+    malloc.free(toRepoPath);
+  }
+
   void resetHard(String directory) {
     var repoDir = directory.toNativeUtf8();
 
@@ -283,11 +309,11 @@ class GitBindings {
     malloc.free(hash);
   }
 
-  void checkout(String directory, String branch) {
+  void switchBranch(String directory, String branch) {
     var repoDir = directory.toNativeUtf8();
     var branchName = branch.toNativeUtf8();
 
-    var retValue = lib.GitCheckout(
+    var retValue = lib.GitSwitch(
       repoDir.cast<Char>(),
       branchName.cast<Char>(),
     );
@@ -295,7 +321,7 @@ class GitBindings {
       var err = retValue.cast<Utf8>().toDartString();
       lib.free(retValue.cast());
 
-      throw Exception("GitCheckout failed with error: $err");
+      throw Exception("GitSwitch failed with error: $err");
     }
 
     malloc.free(repoDir);

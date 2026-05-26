@@ -76,7 +76,7 @@ class _MyAppState extends State<MyApp> {
                         await getApplicationDocumentsDirectory();
                     gitBindings.clone(
                       cloneUrl,
-                      appDocumentsDir.path + "/test",
+                      '${appDocumentsDir.path}/test',
                       utf8.encode(privateKey),
                       privateKeyPassword,
                     );
