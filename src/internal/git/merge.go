@@ -147,7 +147,7 @@ func MergeCurrentBranch(directory string) error {
 		return nil
 	}
 
-	author, committer, err := mergeSignatures(repo)
+	author, committer, err := commitSignatures(repo)
 	if err != nil {
 		return err
 	}
@@ -535,7 +535,7 @@ func applyResolvedPath(directory string, path string, current pathSnapshot, reso
 	}
 }
 
-func mergeSignatures(repo *git.Repository) (*object.Signature, *object.Signature, error) {
+func commitSignatures(repo *git.Repository) (*object.Signature, *object.Signature, error) {
 	cfg, err := repo.Config()
 	if err != nil {
 		return nil, nil, err

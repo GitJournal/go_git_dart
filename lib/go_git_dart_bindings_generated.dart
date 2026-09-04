@@ -2241,6 +2241,28 @@ class GoGitDartBindings {
       ffi.Pointer<ffi.Char> Function(
           ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
 
+  ffi.Pointer<ffi.Char> GitCommit(
+    ffi.Pointer<ffi.Char> directory,
+    ffi.Pointer<ffi.Char> message,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outputHash,
+  ) {
+    return _GitCommit(
+      directory,
+      message,
+      outputHash,
+    );
+  }
+
+  late final _GitCommitPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>)>>('GitCommit');
+  late final _GitCommit = _GitCommitPtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
+
   ffi.Pointer<ffi.Char> GitRemove(
     ffi.Pointer<ffi.Char> directory,
     ffi.Pointer<ffi.Char> path,

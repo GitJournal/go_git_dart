@@ -231,6 +231,36 @@ class GitBindings {
     malloc.free(repoPath);
   }
 
+  String commit(String directory, String message) {
+    var repoDir = directory.toNativeUtf8();
+    var commitMessage = message.toNativeUtf8();
+    var outputHash = malloc.allocate<Pointer<Char>>(sizeOf<Pointer<Char>>());
+
+    var retValue = lib.GitCommit(
+      repoDir.cast<Char>(),
+      commitMessage.cast<Char>(),
+      outputHash,
+    );
+    if (retValue != nullptr) {
+      var err = retValue.cast<Utf8>().toDartString();
+      lib.free(retValue.cast());
+      malloc.free(repoDir);
+      malloc.free(commitMessage);
+      malloc.free(outputHash);
+
+      throw Exception("GitCommit failed with error: $err");
+    }
+
+    malloc.free(repoDir);
+    malloc.free(commitMessage);
+
+    var hash = outputHash.value.cast<Utf8>().toDartString();
+    lib.free(outputHash.value.cast());
+    malloc.free(outputHash);
+
+    return hash;
+  }
+
   void remove(String directory, String path) {
     var repoDir = directory.toNativeUtf8();
     var repoPath = path.toNativeUtf8();

@@ -105,6 +105,18 @@ class GitBindingsAsync {
     if (ex != null) throw Exception(ex);
   }
 
+  Future<String> commit(String directory, String message) async {
+    var helperIsolateSendPort = await _helperIsolateSendPort;
+    var requestId = _nextCommitRequestId++;
+    var request = _CommitRequest(requestId, _libPath, directory, message);
+    var completer = Completer<(String?, Exception?)>();
+    _commitRequests[requestId] = completer;
+    helperIsolateSendPort.send(request);
+    var result = await completer.future;
+    if (result.$2 != null) throw Exception(result.$2!);
+    return result.$1!;
+  }
+
   Future<void> remove(String directory, String path) async {
     var helperIsolateSendPort = await _helperIsolateSendPort;
     var requestId = _nextRemoveRequestId++;
@@ -289,6 +301,23 @@ class _AddResponse {
   const _AddResponse(this.id, this.exception);
 }
 
+class _CommitRequest {
+  final int id;
+  final String? libPath;
+  final String directory;
+  final String message;
+
+  const _CommitRequest(this.id, this.libPath, this.directory, this.message);
+}
+
+class _CommitResponse {
+  final int id;
+  final String? hash;
+  final Exception? exception;
+
+  const _CommitResponse(this.id, this.hash, this.exception);
+}
+
 class _RemoveRequest {
   final int id;
   final String? libPath;
@@ -404,6 +433,9 @@ final _defaultBranchRequests = <int, Completer<(String?, Exception?)>>{};
 int _nextAddRequestId = 0;
 final _addRequests = <int, Completer<Exception?>>{};
 
+int _nextCommitRequestId = 0;
+final _commitRequests = <int, Completer<(String?, Exception?)>>{};
+
 int _nextRemoveRequestId = 0;
 final _removeRequests = <int, Completer<Exception?>>{};
 
@@ -465,6 +497,12 @@ Future<SendPort> _helperIsolateSendPort = () async {
         final completer = _addRequests[data.id]!;
         _addRequests.remove(data.id);
         completer.complete(data.exception);
+        return;
+      }
+      if (data is _CommitResponse) {
+        final completer = _commitRequests[data.id]!;
+        _commitRequests.remove(data.id);
+        completer.complete((data.hash, data.exception));
         return;
       }
       if (data is _RemoveResponse) {
@@ -571,6 +609,16 @@ Future<SendPort> _helperIsolateSendPort = () async {
             sendPort.send(_AddResponse(data.id, null));
           } on Exception catch (e) {
             sendPort.send(_AddResponse(data.id, e));
+          }
+          return;
+        }
+        if (data is _CommitRequest) {
+          try {
+            var repo = GitBindings(data.libPath);
+            var hash = repo.commit(data.directory, data.message);
+            sendPort.send(_CommitResponse(data.id, hash, null));
+          } on Exception catch (e) {
+            sendPort.send(_CommitResponse(data.id, null, e));
           }
           return;
         }

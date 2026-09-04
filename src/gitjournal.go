@@ -72,6 +72,17 @@ func GitAdd(directory *C.char, path *C.char) *C.char {
 	return nil
 }
 
+//export GitCommit
+func GitCommit(directory *C.char, message *C.char, outputHash **C.char) *C.char {
+	hash, err := git.Commit(C.GoString(directory), C.GoString(message))
+	if err != nil {
+		return C.CString(err.Error())
+	}
+
+	*outputHash = C.CString(hash)
+	return nil
+}
+
 //export GitRemove
 func GitRemove(directory *C.char, path *C.char) *C.char {
 	err := git.Remove(C.GoString(directory), C.GoString(path))

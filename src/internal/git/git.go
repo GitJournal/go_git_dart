@@ -172,6 +172,33 @@ func Add(directory string, path string) error {
 	return err
 }
 
+func Commit(directory string, message string) (string, error) {
+	message = strings.TrimSpace(message)
+	if message == "" {
+		return "", fmt.Errorf("commit message is required")
+	}
+
+	r, w, err := openRepositoryAndWorktree(directory)
+	if err != nil {
+		return "", err
+	}
+
+	author, committer, err := commitSignatures(r)
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := w.Commit(message, &git.CommitOptions{
+		Author:    author,
+		Committer: committer,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return hash.String(), nil
+}
+
 func Remove(directory string, path string) error {
 	w, err := openWorktree(directory)
 	if err != nil {

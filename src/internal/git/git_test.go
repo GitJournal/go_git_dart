@@ -26,6 +26,122 @@ func TestAddStagesNewFile(t *testing.T) {
 	}
 }
 
+func TestCommitCreatesCommitAndReturnsHash(t *testing.T) {
+	dir, repo, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "hello")
+	if _, err := w.Add("note.md"); err != nil {
+		t.Fatalf("Add(note.md) error = %v", err)
+	}
+
+	hash, err := Commit(dir, "add note")
+	if err != nil {
+		t.Fatalf("Commit() error = %v", err)
+	}
+
+	if len(hash) != 40 {
+		t.Fatalf("hash length = %d, want 40", len(hash))
+	}
+
+	head, err := repo.Head()
+	if err != nil {
+		t.Fatalf("Head() error = %v", err)
+	}
+	if got := head.Hash().String(); got != hash {
+		t.Fatalf("HEAD = %s, want %s", got, hash)
+	}
+
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		t.Fatalf("CommitObject() error = %v", err)
+	}
+	if got := commit.Message; got != "add note" {
+		t.Fatalf("commit message = %q, want %q", got, "add note")
+	}
+}
+
+func TestCommitUsesConfiguredIdentity(t *testing.T) {
+	dir, repo, w := newTestRepo(t)
+	cfg, err := repo.Config()
+	if err != nil {
+		t.Fatalf("Config() error = %v", err)
+	}
+	cfg.User.Name = "Test User"
+	cfg.User.Email = "test@example.com"
+	if err := repo.SetConfig(cfg); err != nil {
+		t.Fatalf("SetConfig() error = %v", err)
+	}
+	writeFile(t, dir, "note.md", "hello")
+	if _, err := w.Add("note.md"); err != nil {
+		t.Fatalf("Add(note.md) error = %v", err)
+	}
+
+	hash, err := Commit(dir, "add note")
+	if err != nil {
+		t.Fatalf("Commit() error = %v", err)
+	}
+
+	commit, err := repo.CommitObject(plumbing.NewHash(hash))
+	if err != nil {
+		t.Fatalf("CommitObject() error = %v", err)
+	}
+	if got := commit.Author.Name; got != "Test User" {
+		t.Fatalf("author name = %q, want %q", got, "Test User")
+	}
+	if got := commit.Author.Email; got != "test@example.com" {
+		t.Fatalf("author email = %q, want %q", got, "test@example.com")
+	}
+	if got := commit.Committer.Name; got != "Test User" {
+		t.Fatalf("committer name = %q, want %q", got, "Test User")
+	}
+	if got := commit.Committer.Email; got != "test@example.com" {
+		t.Fatalf("committer email = %q, want %q", got, "test@example.com")
+	}
+}
+
+func TestCommitFallsBackToGitJournalIdentity(t *testing.T) {
+	dir, repo, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "hello")
+	if _, err := w.Add("note.md"); err != nil {
+		t.Fatalf("Add(note.md) error = %v", err)
+	}
+
+	hash, err := Commit(dir, "add note")
+	if err != nil {
+		t.Fatalf("Commit() error = %v", err)
+	}
+
+	commit, err := repo.CommitObject(plumbing.NewHash(hash))
+	if err != nil {
+		t.Fatalf("CommitObject() error = %v", err)
+	}
+	if got := commit.Author.Name; got != "GitJournal" {
+		t.Fatalf("author name = %q, want %q", got, "GitJournal")
+	}
+	if got := commit.Author.Email; got != "gitjournal@example.com" {
+		t.Fatalf("author email = %q, want %q", got, "gitjournal@example.com")
+	}
+}
+
+func TestCommitFailsForBlankMessage(t *testing.T) {
+	dir, _, w := newTestRepo(t)
+	writeFile(t, dir, "note.md", "hello")
+	if _, err := w.Add("note.md"); err != nil {
+		t.Fatalf("Add(note.md) error = %v", err)
+	}
+
+	if _, err := Commit(dir, " \t\n"); err == nil {
+		t.Fatal("Commit() error = nil, want error")
+	}
+}
+
+func TestCommitFailsWithoutStagedChanges(t *testing.T) {
+	dir, _, _ := newTestRepo(t)
+
+	if _, err := Commit(dir, "empty"); err == nil {
+		t.Fatal("Commit() error = nil, want error")
+	}
+}
+
 func TestRemoveDeletesFromWorktreeAndIndex(t *testing.T) {
 	dir, _, w := newTestRepo(t)
 	writeFile(t, dir, "note.md", "hello")
